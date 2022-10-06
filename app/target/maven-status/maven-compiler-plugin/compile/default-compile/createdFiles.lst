@@ -1,0 +1,7 @@
+com\prive\ordering\common\Result.class
+com\prive\ordering\service\Impl\PriveOrderServiceImpl.class
+com\prive\ordering\service\PriveOrderService.class
+com\prive\ordering\model\PriveOrder.class
+com\prive\ordering\controller\PingController.class
+com\prive\ordering\OrderingApplication.class
+com\prive\ordering\mapper\PriveOrderMapper.class

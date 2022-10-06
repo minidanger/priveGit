@@ -1,0 +1,29 @@
+# Use root/root as user/password credentials
+version: '3.1'
+
+services:
+  app:
+    build: .
+    ports:
+      - 8080:8080
+
+  dummy-broker:
+    build: ./dummy-broker
+    ports:
+      - 9080:9080
+
+  db:
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: challenge
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080

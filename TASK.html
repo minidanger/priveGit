@@ -1,0 +1,142 @@
+<h1 id="challenge">Challenge</h1>
+<p>Implement a simple ORDER SYSTEM API, which accepts orders from a USER to buy assets,<br>pass them to a BROKER service responsible for orders execution, and process results.</p>
+<p><strong>We LOVE questions, please ask if anything is not clear.</strong></p>
+<h2 id="notes">NOTES</h2>
+<ul>
+<li>You need a Docker to run development environment and the final solution</li>
+<li>We expect production ready solution according to the TASK below</li>
+<li>We do not specify how errors should be handled/returned, this is up to you</li>
+<li>For DB and BROKER server you can hardcode connection strings and credentials in your code</li>
+<li>We expect automated tests</li>
+</ul>
+<p>This directory includes:</p>
+<ul>
+<li><strong>./app</strong> directory, contains a simple Spring Boot Java app, modify or replace it with your solution</li>
+<li><strong>Dockerfile</strong> defines how to build and run code from ./app dir in Docker.<ul>
+<li>You may need to modify it depending on how your app must be built, tested and launched</li>
+</ul>
+</li>
+<li><strong>docker-compose.yml</strong>: compiles and runs your solution and development environment:<ul>
+<li><strong>MySQL</strong>. Accessible via <code>localhost:3306</code> or <code>db:3306</code>, user: <code>root</code>, pass: <code>root</code>, database: <code>challenge</code></li>
+<li><strong>Dummy BROKER</strong> server. Listens on <code>http://localhost:9080</code>, always returns HTTP 200</li>
+<li><strong>Adminer</strong>. Database admin tool, accessible via <a href="http://localhost:8081/?server=db&amp;username=root&amp;db=challenge">this link</a> (pass: <code>root</code>)</li>
+</ul>
+</li>
+</ul>
+<p><strong>Step 1: start development environment, write some code</strong></p>
+<p>Run the command, may need <code>sudo</code> in Linux.</p>
+<pre><code>$ docker-compose up
+</code></pre>
+<p>All services would start. Java app will serve <code>GET http://localhost:8080/ping</code> endpoint. You can now<br>replace Java app with your solution, build, run and debug it separately, ie outside Docker, use<br>random port.</p>
+<p>For MySQL connection in your app use the following <code>HOST:PORT</code>:</p>
+<ul>
+<li>App running outside Docker container: <code>localhost:3306</code> </li>
+<li>App running inside Docker container: <code>db:3306</code></li>
+</ul>
+<p>Make sure that your <strong>final</strong> solution runs on port <code>:8080</code>.</p>
+<p><strong>Step 2: build and run your solution in Docker</strong></p>
+<ul>
+<li>Check Dockerfile and make changes if required, ie install Gradle, change build commands.</li>
+<li>Clean ./app folder from any build artifacts, a clean docker build must work for the final solution</li>
+<li>Stop containers (Ctrl+c) and remove containers <code>docker-compose down</code></li>
+<li>We recommend removing <code>prive-ordering-challenge_app</code> Docker image manually to make sure that an<br>up-to-date code would be copied to the new Java app Docker container.<ul>
+<li><code>docker images</code> to list images</li>
+<li><code>docker rmi prive-ordering-challenge_app</code> to remove <code>prive-ordering-challenge_app</code> image</li>
+</ul>
+</li>
+<li>Re-run <code>docker-compose up</code>, make sure tests are executed on the start, and the solution works<br>properly on <code>http://localhost:8080</code></li>
+</ul>
+<p><strong>Step 3: add README</strong></p>
+<p>Include README file</p>
+<ul>
+<li>Describe how to compile/run your tests. The reviewer may do it manually inside the Docker<br>container for your solution.</li>
+<li>Document anything that you would like to add to your solution but haven&#39;t or couldn&#39;t do</li>
+<li>Add any other points relevant to the reviewer.</li>
+</ul>
+<p><strong>Step 4: Ship it!</strong></p>
+<p>ZIP this folder and send it back to us. We will provide feedback about your solution soon.</p>
+<h2 id="task">TASK</h2>
+<h3 id="tech-stack">Tech Stack</h3>
+<ul>
+<li>Java with OpenJDK 11</li>
+<li>Spring Framework</li>
+<li>JUnit</li>
+<li>Database, pick one<ul>
+<li>MySQL, included in docker-compose.yml</li>
+<li>other SQL DB like PostgreSQL, must be included in docker-compose.yml</li>
+<li>MongoDB, must be included in docker-compose.yml</li>
+</ul>
+</li>
+</ul>
+<h3 id="rules">Rules</h3>
+<ul>
+<li>All correct orders are saved and have an active status:<ul>
+<li>An order sent to the ORDER SYSTEM API, but not yet accepted by the BROKER is in <code>PLACED</code> state</li>
+<li>An order sent to the ORDER SYSTEM API, and accepted by the BROKER is in <code>QUEUED</code> state<br>(see <code>POST /broker-callback</code> below)</li>
+<li>An order processed by the BROKER, would be reported by the BROKER as <code>FULFILLED</code> or <code>REJECTED</code><br>(see <code>POST /broker-callback</code> below)</li>
+</ul>
+</li>
+<li>BROKER communicates with the ORDER SYSTEM API asynchronously via <code>POST /broker-callback</code></li>
+<li>Do not assume that BROKER&#39;s requests are always syntactically or logically correct,<br>ie BROKER may report that the same order is <code>FULFILLED</code> and <code>REJECTED</code>.</li>
+<li>Order active status got modified in the order of calls to <code>POST /broker-callback</code></li>
+</ul>
+<h3 id="endpoints">Endpoints</h3>
+<p>All endpoints are JSON-based.</p>
+<p><strong>1. Create order</strong><br><code>POST /orders</code></p>
+<p>Create a new order.</p>
+<p>Request HTTP body:</p>
+<ul>
+<li><code>type</code>:  order type. Allowed values: <code>MARKET</code> or <code>LIMIT</code></li>
+<li><code>qty</code>:   quantity of assets. A positive integer number</li>
+<li><code>code</code>:  asset code. 3 to 4 capitalised symbols of an alpha-numeric string</li>
+<li><code>price</code>: limit price. A positive number string with up-to 4 decimal digits.<br>     Required if the order type is <code>LIMIT</code></li>
+</ul>
+<p>Example: <code>{ &quot;type&quot;: &quot;LIMIT&quot;, &quot;qty&quot;: 100, &quot;code&quot;: &quot;AAPL&quot;, &quot;price&quot;: &quot;123.4567&quot; }</code></p>
+<p>Response HTTP body:</p>
+<ul>
+<li><code>id</code>: a unique order ID string</li>
+</ul>
+<p>Example: <code>{ &quot;id&quot;: &quot;ORDER ID&quot; }</code></p>
+<p>Logic:</p>
+<ul>
+<li>The endpoint accepts user input.</li>
+<li>On correct input generates a unique order ID and request ID (as strings)</li>
+<li>Adds order ID to users payload as <code>&quot;id&quot;: &quot;...&quot;</code> and request ID as <code>&quot;req_id&quot;: &quot;...&quot;</code></li>
+<li>Calls broker&#39;s <code>POST /create-order</code> with a new payload</li>
+<li>Broker returns HTTP 200, on successful data transfer</li>
+<li>Order is now created and its status is <code>PLACED</code></li>
+<li>Returns order ID back to the user</li>
+<li>Order status would be <code>QUEUED</code> or <code>REJECTED</code> later based on a call to <code>POST /broker-callback</code></li>
+</ul>
+<p><strong>2. Broker callback</strong><br><code>POST /broker-callback</code></p>
+<p>A callback used by the broker to report requests status or finalize orders.</p>
+<p>Request HTTP body (for requests):</p>
+<ul>
+<li><code>req_id</code>: request ID generated by the API on <code>POST /orders</code></li>
+<li><code>status</code>: request status: <code>ACCEPTED</code> or <code>REJECTED</code></li>
+</ul>
+<p>Example: <code>{ &quot;req_id&quot;: &quot;REQUEST ID&quot;, &quot;status&quot;: &quot;ACCEPTED&quot; }</code></p>
+<p>Request HTTP body (for orders):</p>
+<ul>
+<li><code>id</code>:     order ID generated by the API on <code>POST /orders</code></li>
+<li><code>status</code>: order final status: <code>FULFILLED</code> or <code>REJECTED</code></li>
+</ul>
+<p>Example: <code>{ &quot;id&quot;: &quot;ORDER ID&quot;, &quot;status&quot;: &quot;FULFILLED&quot; }</code></p>
+<p><strong>3. List orders</strong><br><code>GET /orders</code></p>
+<p>Returns the list of orders with their active state</p>
+<p>Response HTTP body, a JSON array of objects with the following format:</p>
+<ul>
+<li><code>id</code>:     order ID string</li>
+<li><code>type</code>:   order type string</li>
+<li><code>qty</code>:    quantity of assets. Integer number</li>
+<li><code>code</code>:   asset code string</li>
+<li><code>price</code>:  limit price number string with up-to 4 decimal digits. Required for <code>LIMIT</code> order type </li>
+<li><code>status</code>: a string representing the order status: <code>PLACED</code>, <code>QUEUED</code>, <code>FULFILLED</code>, or <code>REJECTED</code></li>
+</ul>
+<p>Example:</p>
+<pre><code>[
+    { &quot;id&quot;: &quot;ORDER ID&quot;, &quot;type&quot;: &quot;LIMIT&quot;, &quot;qty&quot;: 100, &quot;code&quot;: &quot;AAPL&quot;, &quot;price&quot;: &quot;123.4567&quot;, &quot;status&quot;: &quot;PLACED&quot; },
+    ...
+]
+</code></pre>
+<p><strong>We LOVE questions, please ask if anything is not clear.</strong></p>
